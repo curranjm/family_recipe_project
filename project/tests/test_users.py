@@ -23,7 +23,7 @@ class ProjectTests(unittest.TestCase):
     # Tests
     ############################################################################
 
-    def test_main_page(self):
+    def test_login_page(self):
         response = self.app.get('/login', follow_redirects=True)
         self.assertIn(b'Future site for logging into Family Recipes!', response.data)
 
