@@ -1,5 +1,6 @@
 import os
 import unittest
+from helpers import login, register
 
 from project import app, db
 
@@ -29,23 +30,12 @@ class ProjectTests(unittest.TestCase):
 
 
     ############################################################################
-    # Helpers
-    ############################################################################
-
-    def register(self, email, password, confirm):
-        return self.app.post(
-            '/register',
-            data=dict(email=email, password=password, confirm=confirm),
-            follow_redirects=True
-        )
-
-    ############################################################################
     # Tests
     ############################################################################
 
     def test_login_page(self):
         response = self.app.get('/login', follow_redirects=True)
-        self.assertIn(b'Future site for logging into Family Recipes!', response.data)
+        self.assertIn(b'Log In', response.data)
 
     def test_user_registration_form_displays(self):
         response = self.app.get('/register')
@@ -54,20 +44,51 @@ class ProjectTests(unittest.TestCase):
 
     def test_valid_user_registration(self):
         self.app.get('/register', follow_redirects=True)
-        response = self.register('test@test.com', 'FlaskIsAwesome', 'FlaskIsAwesome')
+        response = register(self, 'test@test.com', 'FlaskIsAwesome', 'FlaskIsAwesome')
         self.assertIn(b'Thanks for registering!', response.data)
 
     def test_duplicate_email_user_registration_error(self):
         self.app.get('/register', follow_redirects=True)
-        self.register('test@test.com', 'FlaskIsAwesome', 'FlaskIsAwesome')
+        register(self, 'test@test.com', 'FlaskIsAwesome', 'FlaskIsAwesome')
         self.app.get('/register', follow_redirects=True)
-        response = self.register('test@test.com', 'FlaskIsReallyAwesome', 'FlaskIsReallyAwesome')
+        response = register(self, 'test@test.com', 'FlaskIsReallyAwesome', 'FlaskIsReallyAwesome')
         self.assertIn(b'ERROR! Email (test@test.com) already exists.', response.data)
 
     def test_missing_field_user_registration_error(self):
         self.app.get('/register', follow_redirects=True)
-        response = self.register('test@test.com', 'FlaskIsAwesome', '')
+        response = register(self, 'test@test.com', 'FlaskIsAwesome', '')
         self.assertIn(b'This field is required.', response.data)
+
+    def test_login_form_displays(self):
+        response = self.app.get('/login')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Log In', response.data)
+
+    # test logging in / logging out
+
+    def test_valid_login(self):
+        self.app.get('/register', follow_redirects=True)
+        register(self, 'test@test.com', 'FlaskIsAwesome', 'FlaskIsAwesome')
+        self.app.get('/login', follow_redirects=True)
+        response = login(self, 'test@test.com', 'FlaskIsAwesome')
+        self.assertIn(b'Welcome, test@test.com!', response.data)
+
+    def test_login_without_registering(self):
+        self.app.get('/login', follow_redirects=True)
+        response = login(self, 'test@test.com', 'FlaskIsAwesome')
+        self.assertIn(b'ERROR! Incorrect login credentials.', response.data)
+
+    def test_valid_logout(self):
+        self.app.get('/register', follow_redirects=True)
+        register(self, 'test@test.com', 'FlaskIsAwesome', 'FlaskIsAwesome')
+        self.app.get('/login', follow_redirects=True)
+        login(self, 'test@test.com', 'FlaskIsAwesome')
+        response = self.app.get('/logout', follow_redirects=True)
+        self.assertIn(b'Goodbye!', response.data)
+
+    def test_invalid_logout_within_being_logged_in(self):
+        response = self.app.get('/logout', follow_redirects=True)
+        self.assertIn(b'Log In', response.data)
 
 if __name__ == "__main__":
     unittest.main()

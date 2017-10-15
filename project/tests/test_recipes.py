@@ -1,5 +1,6 @@
 import os
 import unittest
+from helpers import login, register
 
 from project import app, db
 
@@ -27,16 +28,16 @@ class ProjectTests(unittest.TestCase):
         db.session.remove()
         db.drop_all()
 
+
     ############################################################################
     # Tests
     ############################################################################
 
     def test_main_page(self):
         response = self.app.get('/', follow_redirects=True)
-        self.assertIn(b'Breakfast Recipes', response.data)
-        self.assertIn(b'Lunch Recipes', response.data)
-        self.assertIn(b'Dinner Recipes', response.data)
-        self.assertIn(b'Dessert Recipes', response.data)
+        self.assertIn(b'Family Recipes', response.data)
+        self.assertIn(b'Register', response.data)
+        self.assertIn(b'Log In', response.data)
 
     def test_main_page_query_results(self):
         response = self.app.get('/add', follow_redirects=True)

@@ -3,6 +3,7 @@
 ################################################################################
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 
 ################################################################################
 # config
@@ -17,6 +18,18 @@ app.config.from_pyfile('flask.cfg')
 
 db = SQLAlchemy(app)
 
+# flask_login initialization
+login_manager = LoginManager()           # get the login manager object
+login_manager.init_app(app)              # tell it about the application
+login_manager.login_view = "users.login" # connect it to the login function
+                                         # in the users blueprint
+
+from project.models import User
+# This decorator generates the function used by Flask-Login to reload the user
+# object from the user ID that is stored for each session.
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.filter(User.id == int(user_id)).first()
 
 ################################################################################
 # blueprints

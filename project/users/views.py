@@ -4,9 +4,10 @@
 
 from project import db
 from flask import render_template, Blueprint, request, flash, redirect, url_for
-from .forms import RegisterForm
+from .forms import RegisterForm, LoginForm
 from project.models import User
 from sqlalchemy.exc import IntegrityError
+from flask_login import login_user, current_user, login_required, logout_user
 
 
 ################################################################################
@@ -18,9 +19,6 @@ users_blueprint = Blueprint('users', __name__)
 ################################################################################
 # routes
 ################################################################################
-@users_blueprint.route('/login')
-def index():
-    return render_template('login.html')
 
 @users_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
@@ -38,3 +36,38 @@ def register():
                 db.session.rollback()
                 flash('ERROR! Email ({}) already exists.'.format(form.email.data), 'error')
     return render_template('register.html', form=form)
+
+@users_blueprint.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm(request.form)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            """
+            Flask-SQLAlchemy provides a query attribute on your Model class.
+            When you access it you will get back a new query object over
+            all records.
+            You can then use methods like filter() to filter the records before
+            you fire the select with all() or first().
+            """
+            user = User.query.filter_by(email=form.email.data).first()
+            if user is not None and user.is_correct_password(form.password.data):
+                user.authenticated = True
+                db.session.add(user)
+                db.session.commit()
+                login_user(user)
+                flash('Thanks for logging in, {}'.format(current_user.email))
+                return redirect(url_for('recipes.index'))
+            else:
+                flash('ERROR! Incorrect login credentials.', 'error')
+    return render_template('login.html', form=form)
+
+@users_blueprint.route('/logout')
+@login_required
+def logout():
+    user = current_user
+    user.authenticated = False
+    db.session.add(user)
+    db.session.commit()
+    logout_user()
+    flash('Goodbye!', 'info')
+    return redirect(url_for('users.login'))
