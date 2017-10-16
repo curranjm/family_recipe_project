@@ -1,5 +1,5 @@
 from project import db
-from project.models import Recipe
+from project.models import Recipe, User
 
 
 # drop all of the existing database tables
@@ -15,6 +15,14 @@ recipe3 = Recipe('Mediterranean Chicken', 'Grilled chicken served with pitas, hu
 db.session.add(recipe1)
 db.session.add(recipe2)
 db.session.add(recipe3)
+
+# insert user data
+user1 = User('test@test.com', 'testing')
+user2 = User('another@test.com', 'differentpassword')
+user3 = User('tester3@test.com', 'pass12345')
+db.session.add(user1)
+db.session.add(user2)
+db.session.add(user3)
 
 # commit the changes
 db.session.commit()
