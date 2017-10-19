@@ -5,6 +5,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+from flask_mail import Mail
 
 ################################################################################
 # config
@@ -21,6 +22,9 @@ db = SQLAlchemy(app)
 
 # password encryption initialization
 bcrypt = Bcrypt(app)
+
+# flask_mail plugin for sending email
+mail = Mail(app)
 
 # flask_login initialization
 login_manager = LoginManager()           # get the login manager object
