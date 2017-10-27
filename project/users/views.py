@@ -77,11 +77,9 @@ def register():
                 new_user.authenticated = True
                 db.session.add(new_user)
                 db.session.commit()
-
-                # email user upon registration
+                login_user(new_user)
                 send_confirmation_email(new_user.email)
                 flash('Thanks for registering!  Please check your email to confirm your email address.', 'success')
-
                 return redirect(url_for('recipes.index'))
             except IntegrityError:
                 db.session.rollback()
@@ -170,6 +168,8 @@ def login():
             user = User.query.filter_by(email=form.email.data).first()
             if user is not None and user.is_correct_password(form.password.data):
                 user.authenticated = True
+                user.last_logged_in = user.current_logged_in
+                user.current_logged_in = datetime.now()
                 db.session.add(user)
                 db.session.commit()
                 login_user(user)
@@ -189,3 +189,8 @@ def logout():
     logout_user()
     flash('Goodbye!', 'info')
     return redirect(url_for('users.login'))
+
+@users_blueprint.route('/user_profile')
+@login_required
+def user_profile():
+    return render_template('user_profile.html')
